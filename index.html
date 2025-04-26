@@ -1,0 +1,112 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fractal Generator</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="controls">
+        <h1>Fractal Generator</h1>
+        <label>Fractal Type:
+            <select id="fractalType">
+                <option value="mandelbrot">Mandelbrot</option>
+                <option value="julia">Julia</option>
+            </select>
+        </label>
+
+        <label>Color Scheme:
+            <select id="colorScheme">
+                <option value="rainbow">Rainbow</option>
+                <option value="sunset">Sunset</option>
+                <option value="ice">Ice</option>
+            </select>
+        </label>
+
+        <label>Animation Speed:
+            <input type="range" id="speed" min="0.5" max="5" step="0.1" value="1">
+        </label>
+
+        <button id="generate">Generate</button>
+    </div>
+
+    <canvas id="fractalCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('fractalCanvas');
+        const ctx = canvas.getContext('2d');
+        const generateBtn = document.getElementById('generate');
+        let width, height;
+
+        function resizeCanvas() {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function getColor(value, scheme) {
+            const v = Math.floor(255 * value);
+            switch (scheme) {
+                case 'rainbow':
+                    return `hsl(${v}, 100%, 50%)`;
+                case 'sunset':
+                    return `rgb(${v}, ${Math.floor(v/2)}, ${Math.floor(v/3)})`;
+                case 'ice':
+                    return `rgb(${Math.floor(v/3)}, ${Math.floor(v/2)}, ${v})`;
+                default:
+                    return `rgb(${v}, ${v}, ${v})`;
+            }
+        }
+
+        function drawMandelbrot(colorScheme, zoom, offsetX, offsetY) {
+            const maxIter = 500;
+            for (let x = 0; x < width; x++) {
+                for (let y = 0; y < height; y++) {
+                    let zx = 0, zy = 0;
+                    const cx = (x - width/2) / zoom + offsetX;
+                    const cy = (y - height/2) / zoom + offsetY;
+                    let iter = 0;
+
+                    while (zx*zx + zy*zy < 4 && iter < maxIter) {
+                        const tmp = zx*zx - zy*zy + cx;
+                        zy = 2*zx*zy + cy;
+                        zx = tmp;
+                        iter++;
+                    }
+
+                    const color = iter === maxIter ? 'black' : getColor(iter / maxIter, colorScheme);
+                    ctx.fillStyle = color;
+                    ctx.fillRect(x, y, 1, 1);
+                }
+            }
+        }
+
+        function generateFractal() {
+            const type = document.getElementById('fractalType').value;
+            const colorScheme = document.getElementById('colorScheme').value;
+            const speed = parseFloat(document.getElementById('speed').value);
+
+            let zoom = 200;
+            let offsetX = -0.5;
+            let offsetY = 0;
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                drawMandelbrot(colorScheme, zoom, offsetX, offsetY);
+                zoom *= 1 + (speed * 0.01);
+                requestAnimationFrame(animate);
+            }
+
+            animate();
+        }
+
+        generateBtn.addEventListener('click', generateFractal);
+    </script>
+</body>
+</html>
